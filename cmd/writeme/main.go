@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	target := flag.String("file", "README.fmd", "Target .fmd file to assemble")
+	target := flag.String("file", "WRITEME.fmd", "Target .fmd file to assemble")
 	flag.Parse()
 
 	fmt.Println("WRITEME: Assembling...")
