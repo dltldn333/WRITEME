@@ -1,0 +1,30 @@
+{
+  "name": "writeme-cli",
+  "version": "0.0.1",
+  "description": "The blazing fast README assembler for monorepos.",
+  "keywords": [
+    "readme",
+    "markdown",
+    "monorepo",
+    "documentation",
+    "generator",
+    "docs"
+  ],
+  "homepage": "https://github.com/dltldn333/WRITEME#readme",
+  "bugs": "https://github.com/dltldn333/WRITEME/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dltldn333/WRITEME.git"
+  },
+  "license": "MIT",
+  "author": "dltldn333",
+  "bin": {
+    "writeme": "bin/writeme.js"
+  },
+  "files": [
+    "bin/writeme.js"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -6,7 +6,7 @@ props:
 
 # {{ title }} (v{{ version }})
 
-This document is written in **fmd**.
+This document is plain Markdown, compiled by **WRITEME**.
 
 ## 컴포넌트 테스트
 
