@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/dltldn333/WRITEME/internal/config"
 )
 
 func usage(){
@@ -21,7 +23,11 @@ func main() {
 
 	switch os.Args[1] {
 	case "init":
-		//config.Init(".")
+			if err := config.Init("." ); err != nil{
+			fmt.Fprintln(os.Stderr, "writeme:", err)
+			os.Exit(1)
+		}
+		fmt.Println("Created", config.Filename)
 	case "build":
 		// config.Load(".")
 	default:
