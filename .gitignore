@@ -1,0 +1,10 @@
+# Go build output
+/writeme
+/dist/
+
+# npm
+node_modules/
+*.tgz
+
+# OS
+.DS_Store
