@@ -1,6 +1,6 @@
 {
   "name": "writeme-cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "The blazing fast README assembler for monorepos.",
   "keywords": [
     "readme",
