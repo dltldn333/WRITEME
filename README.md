@@ -1,54 +1,225 @@
 # WRITEME
 
-> The blazing fast README assembler for monorepos.
+[한국어](https://github.com/dltldn333/WRITEME/blob/main/README.ko.md)
 
-Stop copy-pasting documentation across packages. Write a fragment once, include
-it everywhere, and let WRITEME compile plain `README.md` files that GitHub, npm,
-and pkg.go.dev render exactly as they do today.
+Build a `README.md` for every package in a monorepo from one shared set of parts.
 
-> [!WARNING]
-> **Not released yet.** `0.0.x` reserves the name while the compiler is being
-> built. Nothing is functional. Follow the repository for progress.
+## Why
 
-## The idea
+Package READMEs in a monorepo repeat the same sections: install steps, support, license. Every copy has to be edited by hand, and sooner or later they stop matching.
 
-Markdown has no component system, so shared documentation gets duplicated into
-every package and then drifts. Site frameworks solve this by turning docs into a
-website — but a `README.md` has no runtime. It has to stay a static file.
+WRITEME splits a README into source files you edit and a result it generates.
 
-So WRITEME goes the other direction: it compiles *down* to ordinary Markdown.
+| File | What goes in it | Edit it? |
+|---|---|---|
+| **`BASE.md`** | The main part. Text every package shares, such as support and license. `writeme init` creates and registers it. | Yes |
+| **Other parts** (`parts/*.md`) | Extra shared sections. They can take values, such as a package name. | Yes |
+| **`WRITEME.md`** | Text unique to one package, plus `::name` lines where parts go. | Yes |
+| **`README.md`** | The result, rewritten on every build. | No |
 
+## Install
+
+```bash
+npm i -D writeme-cli
 ```
-WRITEME.md  ──[ writeme build ]──>  README.md
+
+or
+
+```bash
+go install github.com/dltldn333/WRITEME/cmd/writeme@latest
 ```
 
-Sources are plain `.md` files, so every editor, linter, and formatter you
-already use keeps working.
+## Walkthrough
 
-## Syntax
+A monorepo with two packages. Both end with the same support, contributing, and license sections, and both show install steps for their own package name.
+
+```text
+my-monorepo/
+├── writeme.yaml
+├── BASE.md                 main part, shared by every package
+├── parts/
+│   └── install.md          extra part that takes the package name
+└── packages/
+    ├── core/
+    │   └── WRITEME.md      only about @acme/core
+    └── react/
+        └── WRITEME.md      only about @acme/react
+```
+
+### 1. Register the parts
+
+`writeme init` creates `writeme.yaml` with `BASE.md` already registered. Add more parts below it. Every file listed under `parts` becomes a component named after the file: `BASE.md` is `::BASE`, and `parts/install.md` is `::install`.
+
+```yaml
+entry: WRITEME.md
+parts:
+  - BASE.md
+  - parts/install.md
+output: README.md
+```
+
+### 2. Write the shared text once
+
+`BASE.md` holds what every package README ends with. It is the same everywhere, so it takes no values.
+
+```markdown
+## Support
+
+Found a bug or have a question? Open an issue at
+https://github.com/acme/toolkit/issues and include the package name and version.
+
+## Contributing
+
+Read https://github.com/acme/toolkit/blob/main/CONTRIBUTING.md before opening a pull request.
+
+## License
+
+MIT © Acme
+```
+
+`parts/install.md` needs the package name, so it declares a `pkg` prop in its frontmatter and uses it as `{{ pkg }}`.
 
 ```markdown
 ---
 props:
-  - title
-  - version
+  - pkg
 ---
 
-# {{ title }} (v{{ version }})
+## Install
 
-::badge[Build Status]{color="green"}
-::include{src="./install-guide.md"}
+Install `{{ pkg }}` with the package manager you already use:
+
+- npm: `npm install {{ pkg }}`
+- pnpm: `pnpm add {{ pkg }}`
+- yarn: `yarn add {{ pkg }}`
+
+Node.js 18 or newer is required.
 ```
 
-- **`props`** — a file declares what it accepts, like a function signature
-- **`{{ ... }}`** — interpolation
-- **`::name[label]{attrs}`** — components, using MDC/remark-directive syntax
-- **`::include`** — pull in a fragment; edit it once, every README updates
+### 3. Write only what is unique to each package
 
-## Why Go
+`packages/core/WRITEME.md` holds the title, description, and usage for `@acme/core`. The install steps are one line, and `::BASE` closes the file.
 
-A monorepo tool should not force `node_modules` onto a Go, Rust, or Python
-repository. A single static binary runs in any CI, for any language.
+````markdown
+# @acme/core
+
+Small, dependency-free helpers for dates, strings, and retries.
+Every other package in this repository is built on top of it.
+
+::install{pkg="@acme/core"}
+
+## Usage
+
+```ts
+import { retry } from "@acme/core";
+
+const user = await retry(() => fetchUser(id), { attempts: 3 });
+```
+
+::BASE
+````
+
+`packages/react/WRITEME.md` uses the same parts with a different `pkg`.
+
+```markdown
+# @acme/react
+
+React hooks for the Acme toolkit.
+
+::install{pkg="@acme/react"}
+
+## Usage
+
+Wrap your app in `<AcmeProvider>` and call `useAcme()` inside any component.
+
+::BASE
+```
+
+### 4. Build
+
+Run it from the folder that holds `writeme.yaml`.
+
+```bash
+npx writeme build
+```
+
+```text
+Wrote packages/core/README.md
+Wrote packages/react/README.md
+```
+
+### 5. The result
+
+`packages/core/README.md`:
+
+````markdown
+<!-- Generated by WRITEME. Do not edit this file; edit WRITEME.md instead. -->
+
+# @acme/core
+
+Small, dependency-free helpers for dates, strings, and retries.
+Every other package in this repository is built on top of it.
+
+## Install
+
+Install `@acme/core` with the package manager you already use:
+
+- npm: `npm install @acme/core`
+- pnpm: `pnpm add @acme/core`
+- yarn: `yarn add @acme/core`
+
+Node.js 18 or newer is required.
+
+## Usage
+
+```ts
+import { retry } from "@acme/core";
+
+const user = await retry(() => fetchUser(id), { attempts: 3 });
+```
+
+## Support
+
+Found a bug or have a question? Open an issue at
+https://github.com/acme/toolkit/issues and include the package name and version.
+
+## Contributing
+
+Read https://github.com/acme/toolkit/blob/main/CONTRIBUTING.md before opening a pull request.
+
+## License
+
+MIT © Acme
+````
+
+`packages/react/README.md` gets the same Install section with `@acme/react` filled in and the same sections from `BASE.md`. To change the support, contributing, or license text for every package, edit `BASE.md` and build again.
+
+## Reference
+
+### Commands
+
+| Command | What it does |
+|---|---|
+| `writeme init` | Creates `writeme.yaml` with `BASE.md` registered, plus `BASE.md` and `WRITEME.md`, in the current folder. Existing `WRITEME.md` and `BASE.md` are kept. |
+| `writeme build` | Finds every `WRITEME.md` below the current folder and writes `README.md` next to each. Skips `.git`, `node_modules`, and `vendor`. |
+| `writeme help` | Shows the command help. |
+
+### writeme.yaml
+
+| Key | Meaning |
+|---|---|
+| `entry` | File name of the source in each package. `init` writes `WRITEME.md`. |
+| `parts` | Paths of shared parts, relative to `writeme.yaml`. `init` writes `BASE.md`. |
+| `output` | File name written next to each source. `init` writes `README.md`. |
+
+### Parts rules
+
+- A line holding only `::name` is replaced by that part. The name is the file name without `.md`, so `BASE.md` is `::BASE`.
+- Values are passed as `key="value"`, for example `::install{pkg="@acme/core"}`.
+- A part must declare every value it accepts under `props` in its frontmatter.
+- Parts can use other parts. A part that ends up including itself is an error.
+- `{{ name }}` is replaced in normal text and inline code. Fenced code blocks are copied unchanged, so put values in inline code as in `parts/install.md` above.
+- An unknown part, an undeclared value, or a missing value stops the build with the file and line number, and no `README.md` is written.
 
 ## License
 
