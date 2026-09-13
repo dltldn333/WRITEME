@@ -1,14 +1,7 @@
----
-props:
-  - title
-  - version
----
+# WRITEME example
 
-# {{ title }} (v{{ version }})
+This README.md is generated from WRITEME.md. Edit WRITEME.md, then run `writeme build`.
 
-This document is plain Markdown, compiled by **WRITEME**.
+::install{pkg="writeme-cli"}
 
-## 컴포넌트 테스트
-
-::badge[Build Status]{color="green"}
-::include{src="./install-guide.md"}
+::BASE
