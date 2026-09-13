@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/dltldn333/WRITEME/internal/assemble"
 	"github.com/dltldn333/WRITEME/internal/config"
 	"github.com/dltldn333/WRITEME/internal/workspace"
 )
@@ -27,13 +29,20 @@ func runBuild() error {
 		return err
 	}
 
-	fmt.Println("entries:")
-	for _, e := range ws.Entries {
-		fmt.Printf("  %s -> %s\n", e.Path, e.Output)
+	a := assemble.New(ws)
+	outputs := make([]string, len(ws.Entries))
+	for i, e := range ws.Entries {
+		if outputs[i], err = a.Entry(e); err != nil {
+			return err
+		}
 	}
-	fmt.Println("parts:")
-	for _, p := range ws.Parts {
-		fmt.Printf("  ::%s  (%s)\n", p.Name, p.Path)
+
+	// Write only after every entry assembled, so one bad file leaves nothing half-built.
+	for i, e := range ws.Entries {
+		if err := os.WriteFile(filepath.Join(ws.Root, e.Output), []byte(outputs[i]), 0o644); err != nil {
+			return err
+		}
+		fmt.Println("Wrote", e.Output)
 	}
 
 	return nil
