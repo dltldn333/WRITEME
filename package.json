@@ -22,9 +22,18 @@
     "writeme": "bin/writeme.js"
   },
   "files": [
-    "bin/writeme.js"
+    "bin/writeme.js",
+    "dist/"
   ],
   "engines": {
     "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prepublishOnly": "node scripts/build.mjs --check",
+    "changeset": "changeset"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.2"
   }
 }
