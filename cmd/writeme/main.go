@@ -66,11 +66,14 @@ func main() {
 
 	switch os.Args[1] {
 	case "init":
-		if err := config.Init("."); err != nil {
+		created, err := config.Init(".")
+		if err != nil {
 			fmt.Fprintln(os.Stderr, "writeme:", err)
 			os.Exit(1)
 		}
-		fmt.Println("Created", config.Filename)
+		for _, name := range created {
+			fmt.Println("Created", name)
+		}
 	case "build":
 		if err := runBuild(); err != nil {
 			fmt.Fprintln(os.Stderr, "writeme:", err)

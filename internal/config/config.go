@@ -3,12 +3,17 @@ package config
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/yaml.v3"
 )
 
-const Filename = "writeme.yaml"
+const (
+	Filename      = "writeme.yaml"
+	BaseFilename  = "BASE.md"
+	EntryFilename = "WRITEME.md"
+)
 
 type Config struct {
 	Entry  string   `yaml:"entry"`
@@ -18,21 +23,72 @@ type Config struct {
 
 const defaultConfig = `# writeme.yaml
 entry: WRITEME.md
-parts: []
+
+# 등록하면 ::이름 으로 사용 가능
+parts:
+  - BASE.md
+
 output: README.md
 `
 
-func Init(dir string) error {
-	path := filepath.Join(dir, Filename)
-	_, err := os.Stat(path)
+const defaultBase = `<!-- Shared content. Pull it into any WRITEME.md with ::BASE -->
 
-	if err == nil {
-		return fmt.Errorf("%s already exists", path)
+## License
+
+MIT
+`
+
+const defaultEntry = `# Project Title
+
+Describe your project here.
+
+::BASE
+`
+
+// Init scaffolds a project in dir and reports which files it created.
+// writeme.yaml must not already exist; BASE.md and WRITEME.md are only written
+// when missing, so hand-written content is never clobbered.
+func Init(dir string) ([]string, error) {
+	configPath := filepath.Join(dir, Filename)
+
+	exists, err := fileExists(configPath)
+	if err != nil {
+		return nil, err
 	}
-	if !errors.Is(err, os.ErrNotExist) {
-		return err
+	if exists {
+		return nil, fmt.Errorf("%s already exists", configPath)
 	}
-	return os.WriteFile(path, []byte(defaultConfig), 0o644)
+
+	if err := os.WriteFile(configPath, []byte(defaultConfig), 0o644); err != nil {
+		return nil, err
+	}
+	created := []string{Filename}
+
+	scaffold := []struct {
+		name    string
+		content string
+	}{
+		{BaseFilename, defaultBase},
+		{EntryFilename, defaultEntry},
+	}
+
+	for _, f := range scaffold {
+		path := filepath.Join(dir, f.name)
+
+		exists, err := fileExists(path)
+		if err != nil {
+			return created, err
+		}
+		if exists {
+			continue
+		}
+		if err := os.WriteFile(path, []byte(f.content), 0o644); err != nil {
+			return created, err
+		}
+		created = append(created, f.name)
+	}
+
+	return created, nil
 }
 
 func Load(dir string) (Config, error) {
@@ -48,4 +104,15 @@ func Load(dir string) (Config, error) {
 		return Config{}, fmt.Errorf("parsing %s: %w", path, err)
 	}
 	return cfg, nil
+}
+
+func fileExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	return false, err
 }

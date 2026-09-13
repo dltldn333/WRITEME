@@ -6,24 +6,84 @@ import (
 	"testing"
 )
 
-func TestInitCreatesFile(t *testing.T) {
+func TestInitCreatesFiles(t *testing.T) {
 	dir := t.TempDir()
 
-	if err := Init(dir); err != nil {
+	created, err := Init(dir)
+	if err != nil {
 		t.Fatalf("Init() unexpected error: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(dir, Filename)); err != nil {
-		t.Fatalf("%s was not created: %v", Filename, err)
+	want := []string{Filename, BaseFilename, EntryFilename}
+	if len(created) != len(want) {
+		t.Errorf("created = %v, want %v", created, want)
+	}
+	for _, name := range want {
+		if _, err := os.Stat(filepath.Join(dir, name)); err != nil {
+			t.Errorf("%s was not created: %v", name, err)
+		}
+	}
+}
+
+func TestInitKeepsExistingFiles(t *testing.T) {
+	for _, name := range []string{BaseFilename, EntryFilename} {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			path := filepath.Join(dir, name)
+
+			if err := os.WriteFile(path, []byte("mine\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+
+			created, err := Init(dir)
+			if err != nil {
+				t.Fatalf("Init() unexpected error: %v", err)
+			}
+			for _, c := range created {
+				if c == name {
+					t.Errorf("%s should not have been rewritten", name)
+				}
+			}
+
+			got, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(got) != "mine\n" {
+				t.Errorf("%s was overwritten: %q", name, got)
+			}
+		})
+	}
+}
+
+// Init should leave a directory that "writeme build" can run in as-is.
+func TestInitProducesBuildableProject(t *testing.T) {
+	dir := t.TempDir()
+
+	if _, err := Init(dir); err != nil {
+		t.Fatalf("Init() unexpected error: %v", err)
+	}
+
+	cfg, err := Load(dir)
+	if err != nil {
+		t.Fatalf("Load() unexpected error: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, cfg.Entry)); err != nil {
+		t.Errorf("entry %s from config does not exist: %v", cfg.Entry, err)
+	}
+	for _, part := range cfg.Parts {
+		if _, err := os.Stat(filepath.Join(dir, part)); err != nil {
+			t.Errorf("part %s from config does not exist: %v", part, err)
+		}
 	}
 }
 
 func TestInitRefusesOverwrite(t *testing.T) {
 	dir := t.TempDir()
 
-	if err := Init(dir); err != nil {
+	if _, err := Init(dir); err != nil {
 		t.Fatalf("first Init() unexpected error: %v", err)
 	}
-	if err := Init(dir); err == nil {
+	if _, err := Init(dir); err == nil {
 		t.Fatal("second Init() should fail when the file already exists")
 	}
 }
@@ -31,7 +91,7 @@ func TestInitRefusesOverwrite(t *testing.T) {
 func TestLoadReadsDefaults(t *testing.T) {
 	dir := t.TempDir()
 
-	if err := Init(dir); err != nil {
+	if _, err := Init(dir); err != nil {
 		t.Fatalf("Init() unexpected error: %v", err)
 	}
 
@@ -45,8 +105,8 @@ func TestLoadReadsDefaults(t *testing.T) {
 	if cfg.Output != "README.md" {
 		t.Errorf("Output = %q, want %q", cfg.Output, "README.md")
 	}
-	if len(cfg.Parts) != 0 {
-		t.Errorf("Parts = %v, want empty", cfg.Parts)
+	if len(cfg.Parts) != 1 || cfg.Parts[0] != BaseFilename {
+		t.Errorf("Parts = %v, want [%s]", cfg.Parts, BaseFilename)
 	}
 }
 
