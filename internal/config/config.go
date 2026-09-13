@@ -31,9 +31,7 @@ parts:
 output: README.md
 `
 
-const defaultBase = `<!-- Shared content. Pull it into any WRITEME.md with ::BASE -->
-
-## License
+const defaultBase = `## License
 
 MIT
 `
