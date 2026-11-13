@@ -2,6 +2,13 @@
   <img src="https://raw.githubusercontent.com/dltldn333/WRITEME/main/.github/assets/writeme.svg" width="98" alt="WRITEME logo">
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/writeme-cli"><img src="https://img.shields.io/npm/v/writeme-cli.svg?color=black"></a>
+  <a href="https://www.npmjs.com/package/writeme-cli"><img src="https://img.shields.io/npm/dm/writeme-cli.svg?color=black"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?color=black"></a>
+  <a href="https://go.dev/"><img src="https://img.shields.io/badge/Go-Ready-blue.svg?color=black"></a>
+</p>
+
 # WRITEME
 
 [한국어](https://github.com/dltldn333/WRITEME/blob/main/README.ko.md)
