@@ -1,5 +1,11 @@
 # writeme-cli
 
+## 0.1.1
+
+### Patch Changes
+
+- 2368317: Add the WRITEME logo to the README.
+
 ## 0.1.0
 
 ### Minor Changes
