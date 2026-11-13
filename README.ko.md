@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dltldn333/WRITEME/main/.github/assets/writeme.svg" width="140" alt="WRITEME logo">
+  <img src="https://raw.githubusercontent.com/dltldn333/WRITEME/main/.github/assets/writeme.svg" width="98" alt="WRITEME logo">
 </p>
 
 # WRITEME
