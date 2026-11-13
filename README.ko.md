@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dltldn333/WRITEME/main/.github/assets/writeme.svg" width="98" alt="WRITEME logo">
+</p>
+
 # WRITEME
 
 [English](https://github.com/dltldn333/WRITEME/blob/main/README.md)
