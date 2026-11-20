@@ -28,7 +28,15 @@ WRITEME는 README를 직접 고치는 원본 파일과 자동으로 만들어지
 | **`WRITEME.md`** | 그 패키지에만 있는 글, 그리고 파츠가 들어갈 자리에 `::이름` 한 줄. | 합니다 |
 | **`README.md`** | 조립 결과. 빌드할 때마다 새로 써집니다. | 하지 않습니다 |
 
+기존 대안들과 비교하면 다음과 같은 차이가 있습니다:
+- **주석 기반 생성기**는 최종 `README.md` 파일 안에 HTML 주석 마커가 남고, 별도의 JS 변환 설정이 필요한 경우가 많습니다.
+- **단순 마크다운 인클루드 도구**는 파일을 그대로 합칠 뿐, 선언형 `props`나 누락 값 검증, 모노레포 자동 탐색을 지원하지 않습니다.
+- **범용 템플릿 엔진(Jinja2, Go 템플릿 등)**은 코드 생성에는 강력하지만, 마크다운 예제 코드 안의 `{{ }}` 문법과 충돌하는 경우가 잦습니다.
+
+WRITEME는 작성 파일과 결과 파일을 분리(`WRITEME.md` → `README.md`)하고, 파일을 쓰기 전에 파츠와 `props`를 파일명·줄 번호 단위로 검증하며, 단일 Go 바이너리(npm 설치 지원)로 가볍게 실행됩니다.
+
 ## 설치
+
 
 ```bash
 npm i -D writeme-cli
@@ -231,6 +239,29 @@ MIT © Acme
 - 파츠 안에서 다른 파츠를 부를 수 있습니다. 결국 자기 자신을 다시 부르게 되면 에러입니다.
 - `{{ 이름 }}`은 일반 글과 한 줄 코드(`` `...` ``) 안에서 치환됩니다. ``` 코드 블록 안은 그대로 복사되니, 값이 필요한 명령어는 위 `parts/install.md`처럼 한 줄 코드로 쓰세요.
 - 없는 파츠, 선언 안 된 값, 값이 없는 `{{ }}`를 만나면 파일과 줄 번호를 알려주고 빌드를 멈춥니다. 이때 `README.md`는 하나도 만들지 않습니다.
+
+## CI에서 사용하기
+
+Pull Request 단계에서 `writeme build`를 실행하고 `git diff`를 검사하면 `README.md`가 최신 상태인지 자동으로 검증할 수 있습니다:
+
+```yaml
+name: Check READMEs
+on: [pull_request]
+
+jobs:
+  writeme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npx writeme-cli build
+      - name: Verify READMEs are up to date
+        run: git diff --exit-code -- 'README.md' '**/README.md'
+```
+
+> **펜스 코드 블록(`` ``` ``) 참고:** 예제 코드 안의 템플릿 문법(Handlebars, Vue, GitHub Actions 표현식 등)이 의도치 않게 변형되지 않도록, 펜스 코드 블록 내부의 `{{ prop }}`은 치환하지 않고 그대로 유지합니다.
 
 ## 라이선스
 
