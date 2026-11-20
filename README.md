@@ -28,6 +28,14 @@ WRITEME splits a README into source files you edit and a result it generates.
 | **`WRITEME.md`** | Text unique to one package, plus `::name` lines where parts go. | Yes |
 | **`README.md`** | The result, rewritten on every build. | No |
 
+Compared to existing workarounds:
+- **Comment-based generators** leave HTML comment markers inside your final `README.md` and often require custom JS transforms.
+- **Plain Markdown include tools** merge files as-is without declared props, missing-value checks, or monorepo discovery.
+- **General template engines (Jinja2, Go templates, etc.)** work well for code generation, but often clash with `{{ }}` syntax inside Markdown examples.
+
+WRITEME keeps authoring and output separate (`WRITEME.md` → `README.md`), validates parts and props with file and line numbers before writing anything, and ships as a single Go binary (also installable via npm).
+
+
 ## Install
 
 ```bash
@@ -231,6 +239,29 @@ MIT © Acme
 - Parts can use other parts. A part that ends up including itself is an error.
 - `{{ name }}` is replaced in normal text and inline code. Fenced code blocks are copied unchanged, so put values in inline code as in `parts/install.md` above.
 - An unknown part, an undeclared value, or a missing value stops the build with the file and line number, and no `README.md` is written.
+## Using in CI
+
+You can catch out-of-date READMEs in pull requests by running `writeme build` and checking `git diff`:
+
+```yaml
+name: Check READMEs
+on: [pull_request]
+
+jobs:
+  writeme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npx writeme-cli build
+      - name: Verify READMEs are up to date
+        run: git diff --exit-code -- 'README.md' '**/README.md'
+```
+
+> **Note on fenced code blocks:** `{{ prop }}` placeholders are intentionally left untouched inside fenced code blocks (`` ``` ``) so template syntax in example code (such as Handlebars, Vue, or GitHub Actions expressions) is never accidentally altered.
+
 
 ## License
 
